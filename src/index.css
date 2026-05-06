@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800;900&display=swap');
-
 @layer base {
   :root {
     /* Onze — dark sport theme */
@@ -65,13 +63,14 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
 
   h1, h2, h3, .font-display {
-    font-family: 'Bebas Neue', 'Inter', sans-serif;
-    letter-spacing: 0.02em;
+    font-family: 'Bebas Neue', sans-serif;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
 }
 

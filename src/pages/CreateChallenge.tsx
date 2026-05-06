@@ -25,23 +25,23 @@ const CreateChallenge = () => {
         }}
       >
         <Field label="Título">
-          <input required placeholder="Ex: Sábado à noite, jogo intenso" className="input-field" />
+          <input required placeholder="Ex: Sábado à noite, jogo intenso" className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
         </Field>
 
         <Field label="Descrição (opcional)">
-          <textarea rows={3} placeholder="Detalhes do desafio..." className="input-field resize-none" />
+          <textarea rows={3} placeholder="Detalhes do desafio..." className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15 resize-none" />
         </Field>
 
         <Field label="Local">
-          <input required placeholder="Campo, pavilhão..." className="input-field" />
+          <input required placeholder="Campo, pavilhão..." className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Data">
-            <input required type="date" className="input-field" />
+            <input required type="date" className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
           </Field>
           <Field label="Hora">
-            <input required type="time" className="input-field" />
+            <input required type="time" className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
           </Field>
         </div>
 
@@ -70,9 +70,6 @@ const CreateChallenge = () => {
           Publicar desafio
         </Button>
       </form>
-
-      <style>{`.input-field { width:100%; background: hsl(var(--input)); border:1px solid hsl(var(--border)); border-radius: 1rem; padding: 0.875rem 1rem; font-size:0.95rem; outline:none; color: hsl(var(--foreground)); transition: all .2s; }
-      .input-field:focus { border-color: hsl(var(--primary)); box-shadow: 0 0 0 3px hsl(var(--primary)/0.15); }`}</style>
     </div>
   );
 };

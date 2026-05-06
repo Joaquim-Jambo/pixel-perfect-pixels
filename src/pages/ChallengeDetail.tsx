@@ -1,11 +1,20 @@
-import { useParams } from "react-router-dom";
-import { Calendar, MapPin, Star, Users, Clock } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { Calendar, MapPin, Star, Users, Clock, AlertCircle } from "lucide-react";
 import { challenges } from "@/data/mock";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+
+const statusStyles: Record<string, string> = {
+  OPEN: "bg-primary/15 text-primary border-primary/30",
+  CLOSED: "bg-muted text-muted-foreground border-border",
+  CANCELLED: "bg-destructive/15 text-destructive border-destructive/30",
+};
 
 const ChallengeDetail = () => {
   const { id } = useParams();
+  const nav = useNavigate();
   const c = challenges.find(x => x.id === id) ?? challenges[0];
   const initials = c.team.split(" ").map(w => w[0]).slice(0, 2).join("");
 
@@ -32,7 +41,7 @@ const ChallengeDetail = () => {
             </div>
           </div>
 
-          <span className="mt-4 inline-block rounded-full border border-primary/30 bg-primary/15 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+          <span className={cn("mt-4 inline-block rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider", statusStyles[c.status] || "bg-muted text-foreground border-border")}>
             {c.status}
           </span>
         </div>
@@ -51,9 +60,24 @@ const ChallengeDetail = () => {
           </p>
         </div>
 
-        <Button variant="hero" size="lg" className="mt-8 w-full">
-          Candidatar-me
-        </Button>
+        {c.status === "OPEN" ? (
+          <Button 
+            variant="hero" 
+            size="lg" 
+            className="mt-8 w-full"
+            onClick={() => {
+              toast.success("Candidatura enviada à equipa!");
+              nav("/app");
+            }}
+          >
+            Candidatar-me
+          </Button>
+        ) : (
+          <div className="mt-8 rounded-2xl bg-secondary p-4 flex items-center justify-center gap-2 text-muted-foreground">
+            <AlertCircle className="h-5 w-5" />
+            <span className="text-sm font-semibold">Desafio já não se encontra disponível</span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { ChallengeCard } from "@/components/ChallengeCard";
 import { myChallenges, myMatches, requests } from "@/data/mock";
@@ -54,7 +55,9 @@ const Games = () => {
               </div>
               <div className="mt-3 flex items-center justify-between">
                 <span className="rounded-lg bg-primary/15 px-3 py-1 text-sm font-display text-primary">{m.type}</span>
-                <Button size="sm" variant="outline">Dar feedback</Button>
+                <Button size="sm" variant="outline" asChild>
+                  <Link to={`/app/match/${m.id}`}>Ver Partida</Link>
+                </Button>
               </div>
             </div>
           ))}

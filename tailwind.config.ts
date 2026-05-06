@@ -62,8 +62,8 @@ export default {
         },
       },
       fontFamily: {
-        display: ['"Bebas Neue"', 'Inter', 'sans-serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['"Bebas Neue"', 'sans-serif'],
+        sans: ['"Space Grotesk"', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         lg: "var(--radius)",

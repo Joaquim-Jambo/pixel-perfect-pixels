@@ -49,7 +49,7 @@ const Profile = () => {
         </div>
 
         <Button asChild variant="ghost" size="sm" className="w-full text-muted-foreground">
-          <Link to="/">Voltar ao welcome</Link>
+          <Link to="/welcome">Voltar ao welcome</Link>
         </Button>
       </div>
     </div>

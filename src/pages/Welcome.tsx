@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import logo from "@/assets/onze-logo.png";
 import hero from "@/assets/hero-pitch.jpg";
 
 const Welcome = () => {
@@ -8,11 +7,11 @@ const Welcome = () => {
     <div className="relative mx-auto flex min-h-screen max-w-md flex-col overflow-hidden bg-background">
       <img src={hero} alt="Football pitch at night" className="absolute inset-0 h-full w-full object-cover opacity-60" />
       <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background" />
-
+      
       <div className="relative z-10 flex flex-1 flex-col items-center justify-between px-8 py-14">
         <div className="flex items-center gap-3 pt-6">
-          <img src={logo} alt="Onze" className="h-10 w-10" />
-          <span className="font-display text-3xl tracking-widest">ONZE</span>
+          <img src="/logo.png" alt="Onze" className="h-10 w-10" />
+          <span className="font-display text-4xl tracking-widest mt-1">ONZE</span>
         </div>
 
         <div className="text-center">
@@ -29,10 +28,10 @@ const Welcome = () => {
 
         <div className="w-full space-y-3">
           <Button asChild variant="hero" size="lg" className="w-full">
-            <Link to="/app">Criar conta</Link>
+            <Link to="/auth/register">Criar conta</Link>
           </Button>
           <Button asChild variant="outline" size="lg" className="w-full">
-            <Link to="/app">Entrar</Link>
+            <Link to="/auth/login">Entrar</Link>
           </Button>
           <p className="text-center text-xs text-muted-foreground pt-2">
             Ao continuar aceitas os termos do Onze.

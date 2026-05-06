@@ -26,7 +26,7 @@ export const ChallengeCard = ({ c, to }: { c: Challenge; to?: string }) => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-display text-xl truncate">{c.team}</h3>
-            <span className={cn("rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", statusStyles[c.status])}>
+            <span className={cn("rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider", statusStyles[c.status] || "bg-muted text-foreground border-border")}>
               {c.status}
             </span>
           </div>

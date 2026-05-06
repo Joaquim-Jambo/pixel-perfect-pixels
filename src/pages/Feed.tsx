@@ -9,7 +9,14 @@ const TYPES: (GameType | "ALL")[] = ["ALL", "5v5", "7v7", "11v11"];
 
 const Feed = () => {
   const [type, setType] = useState<GameType | "ALL">("ALL");
-  const filtered = challenges.filter(c => type === "ALL" || c.type === type);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filtered = challenges.filter(c => {
+    const matchesType = type === "ALL" || c.type === type;
+    const matchesSearch = c.team.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          c.location.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesType && matchesSearch;
+  });
 
   return (
     <div>
@@ -19,19 +26,23 @@ const Feed = () => {
             <p className="text-xs uppercase tracking-[0.3em] text-primary font-bold">Onze</p>
             <h1 className="font-display text-4xl mt-1">Olá, Capitão 👊</h1>
           </div>
-          <Link to="/app/notifications" className="relative flex h-11 w-11 items-center justify-center rounded-full bg-secondary">
+          <Link to="/app/notifications" className="relative flex h-11 w-11 items-center justify-center rounded-full bg-secondary" aria-label="Notificações">
             <Bell className="h-5 w-5" />
             <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-accent" />
           </Link>
         </div>
 
         <div className="mt-6 flex items-center gap-2 rounded-2xl bg-card/80 backdrop-blur px-4 py-3 border border-border/60">
-          <Search className="h-4 w-4 text-muted-foreground" />
+          <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
           <input
             placeholder="Procurar equipas, locais..."
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <Filter className="h-4 w-4 text-primary" />
+          <button aria-label="Filtro de busca">
+            <Filter className="h-4 w-4 text-primary" />
+          </button>
         </div>
       </header>
 
@@ -62,6 +73,14 @@ const Feed = () => {
           {filtered.map(c => <ChallengeCard key={c.id} c={c} />)}
         </div>
       </div>
+
+      <Link
+        to="/app/create"
+        className="fixed bottom-24 right-5 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow hover:scale-105 active:scale-95 transition-smooth z-40"
+        aria-label="Criar Desafio"
+      >
+        <span className="text-3xl font-light mb-1">+</span>
+      </Link>
     </div>
   );
 };
