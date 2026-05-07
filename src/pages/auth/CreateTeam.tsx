@@ -29,7 +29,7 @@ const CreateTeam = () => {
 
     try {
       const token = localStorage.getItem("access_token");
-
+      console.log(token);
       const response = await fetch("http://localhost:8080/teams/", {
         method: "POST",
         headers: {

@@ -82,7 +82,7 @@ export default function EditProfile() {
       }
 
       if (userName.trim()) {
-        const res = await fetch("http://localhost:8080/users/me", {
+        const res = await fetch("http://localhost:8080/users", {
           method: "PATCH",
           headers: getHeaders(true),
           credentials: "include",
@@ -153,12 +153,12 @@ export default function EditProfile() {
       <div className="px-5 pt-6 pb-12 max-w-md mx-auto">
         <Tabs defaultValue="user" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8 bg-card border border-border/50 rounded-2xl h-14 p-1">
-            <TabsTrigger value="user" className="rounded-xl font-bold gap-2">
+            <TabsTrigger value="user" className="rounded-xl py-3 font-bold gap-2">
               <UserCircle className="h-4 w-4" />
               Utilizador
             </TabsTrigger>
             {hasTeam && (
-              <TabsTrigger value="team" className="rounded-xl font-bold gap-2">
+              <TabsTrigger value="team" className="rounded-xl py-3 font-bold gap-2">
                 <Shield className="h-4 w-4" />
                 Equipa
               </TabsTrigger>

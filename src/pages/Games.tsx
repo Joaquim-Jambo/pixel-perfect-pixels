@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { ChallengeCard } from "@/components/ChallengeCard";
@@ -6,11 +6,24 @@ import { myChallenges, myMatches, requests } from "@/data/mock";
 import { cn } from "@/lib/utils";
 import { Calendar, MapPin, Check, X, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Challenge } from "@/types/Challenge";
+import axios from 'axios'
 
 type Tab = "challenges" | "matches" | "requests";
 
 const Games = () => {
   const [tab, setTab] = useState<Tab>("challenges");
+  const [challenges, setChallenges] = useState<Challenge[]>([]);
+
+  async function getChallenges() {
+    const response = await axios.get<Challenge[]>('http://localhost:8080/challenges');
+    console.log(response.data)
+    setChallenges(response.data);
+  }
+
+  useEffect(() => {
+    getChallenges();
+  }, []);
 
   return (
     <div>
@@ -37,7 +50,11 @@ const Games = () => {
         </div>
 
         <div className="mt-5 space-y-3">
-          {tab === "challenges" && myChallenges.map(c => <ChallengeCard key={c.id} c={c} />)}
+          {tab === "challenges" && (
+            challenges.length > 0 ? challenges.map(challenge => <ChallengeCard key={challenge.id} challenge={challenge} />) 
+            :
+            <p className="text-muted-foreground">Não há desafios disponíveis.</p>
+          )}
           {tab === "matches" && myMatches.map(m => (
             <div key={m.id} className="rounded-3xl bg-gradient-card p-5 border border-border/60 shadow-card animate-slide-up">
               <div className="flex items-center justify-between">
@@ -61,8 +78,8 @@ const Games = () => {
               </div>
             </div>
           ))}
-          {tab === "requests" && requests.map(r => {
-            const initials = r.team.split(" ").map(w => w[0]).slice(0, 2).join("");
+          {/* {tab === "requests" && requests.map(r => {
+            const initials = r?.team?.split(" ").map(w => w[0]).slice(0, 2).join("");
             return (
               <div key={r.id} className="flex items-center gap-3 rounded-3xl bg-gradient-card p-4 border border-border/60 animate-slide-up">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl font-display text-xl text-background" style={{ background: r.teamColor }}>
@@ -79,7 +96,7 @@ const Games = () => {
                 <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/20 text-destructive"><X className="h-5 w-5" strokeWidth={3} /></button>
               </div>
             );
-          })}
+          })} */}
         </div>
       </div>
     </div>

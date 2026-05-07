@@ -3,6 +3,8 @@ import { Bell, Filter, Search, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { ChallengeCard } from "@/components/ChallengeCard";
 import { cn } from "@/lib/utils";
+import { Challenge } from "@/types/Challenge";
+import axios, { AxiosError } from "axios";
 
 type GameType = "5v5" | "7v7" | "11v11";
 const TYPES: (GameType | "ALL")[] = ["ALL", "5v5", "7v7", "11v11"];
@@ -37,113 +39,106 @@ const Feed = () => {
     ? `Olá, ${ROLE_LABEL[ownerRole] ?? ownerRole} 👊`
     : "Olá 👊";
 
+  const fetchFeed = async () => {
+    setIsLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      const params = new URLSearchParams();
+      const province = userData?.teams?.[0]?.province ?? userData?.team?.province;
+      if (province) params.append("province", province);
+      if (type !== "ALL") params.append("gameType", GAMETYPE_MAP[type]);
+      const res = await axios.get<Challenge[]>(`http://localhost:8080/challenges/feed?${params}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setChallenges(res.data);
+    }
+    catch (e: any) {
+    console.error("Erro ao carregar feed:", e);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   useEffect(() => {
-    const fetchFeed = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem("access_token");
-        const params = new URLSearchParams();
-
-        const province = userData?.teams?.[0]?.province ?? userData?.team?.province;
-        if (province) params.append("province", province);
-
-        // ← usa o valor do enum, não o label visual
-        if (type !== "ALL") params.append("gameType", GAMETYPE_MAP[type]);
-
-        const res = await fetch(`http://localhost:8080/challenges/feed?${params}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setChallenges(data);
-        }
-      } catch (e) {
-        console.error("Erro ao carregar feed:", e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchFeed();
   }, [type]);
 
-  const filtered = challenges.filter(c =>
-    c.team?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.location?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+const filtered = challenges.filter(c =>
+  c.team?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+  c.location?.toLowerCase().includes(searchQuery.toLowerCase())
+);
 
-  return (
-    <div>
-      <header className="bg-gradient-hero px-5 pt-12 pb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-primary font-bold">Onze</p>
-            <h1 className="font-display text-4xl mt-1">{greeting}</h1>
-          </div>
-          <Link
-            to="/app/notifications"
-            className="relative flex h-11 w-11 items-center justify-center rounded-full bg-secondary"
-            aria-label="Notificações"
+return (
+  <div>
+    <header className="bg-gradient-hero px-5 pt-12 pb-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-primary font-bold">Onze</p>
+          <h1 className="font-display text-4xl mt-1">{greeting}</h1>
+        </div>
+        <Link
+          to="/app/notifications"
+          className="relative flex h-11 w-11 items-center justify-center rounded-full bg-secondary"
+          aria-label="Notificações"
+        >
+          <Bell className="h-5 w-5" />
+          <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-accent" />
+        </Link>
+      </div>
+
+      <div className="mt-6 flex items-center gap-2 rounded-2xl bg-card/80 backdrop-blur px-4 py-3 border border-border/60">
+        <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        <input
+          placeholder="Procurar equipas, locais..."
+          className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+        <button aria-label="Filtro de busca">
+          <Filter className="h-4 w-4 text-primary" />
+        </button>
+      </div>
+    </header>
+
+    <div className="px-5">
+      <div className="-mt-2 flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        {TYPES.map(t => (
+          <button
+            key={t}
+            onClick={() => setType(t)}
+            className={cn(
+              "shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-smooth",
+              type === t
+                ? "bg-primary text-primary-foreground shadow-glow"
+                : "bg-secondary text-muted-foreground hover:text-foreground"
+            )}
           >
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-accent" />
-          </Link>
-        </div>
-
-        <div className="mt-6 flex items-center gap-2 rounded-2xl bg-card/80 backdrop-blur px-4 py-3 border border-border/60">
-          <Search className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-          <input
-            placeholder="Procurar equipas, locais..."
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button aria-label="Filtro de busca">
-            <Filter className="h-4 w-4 text-primary" />
+            {t === "ALL" ? "Todos" : t}
           </button>
-        </div>
-      </header>
+        ))}
+      </div>
 
-      <div className="px-5">
-        <div className="-mt-2 flex gap-2 overflow-x-auto no-scrollbar pb-1">
-          {TYPES.map(t => (
-            <button
-              key={t}
-              onClick={() => setType(t)}
-              className={cn(
-                "shrink-0 rounded-full px-4 py-2 text-sm font-bold transition-smooth",
-                type === t
-                  ? "bg-primary text-primary-foreground shadow-glow"
-                  : "bg-secondary text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {t === "ALL" ? "Todos" : t}
-            </button>
-          ))}
-        </div>
+      <div className="mt-5 flex items-baseline justify-between">
+        <h2 className="font-display text-2xl">Desafios abertos</h2>
+        <span className="text-xs text-muted-foreground">{filtered.length} disponíveis</span>
+      </div>
 
-        <div className="mt-5 flex items-baseline justify-between">
-          <h2 className="font-display text-2xl">Desafios abertos</h2>
-          <span className="text-xs text-muted-foreground">{filtered.length} disponíveis</span>
-        </div>
-
-        <div className="mt-3 space-y-3">
-          {isLoading ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-10">
-              Nenhum desafio disponível na tua zona.
-            </p>
-          ) : (
-            filtered.map(c => <ChallengeCard key={c.id} c={c} />)
-          )}
-        </div>
+      <div className="mt-3 space-y-3">
+        {isLoading ? (
+          <div className="flex justify-center py-10">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <p className="text-center text-sm text-muted-foreground py-10">
+            Nenhum desafio disponível na tua zona.
+          </p>
+        ) : (
+          filtered.map(challenge => <ChallengeCard key={challenge.id} challenge={challenge} />)
+        )}
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Feed;

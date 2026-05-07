@@ -1,6 +1,8 @@
 import { Calendar, MapPin, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
+import { Challenge } from "@/types/Challenge";
 
 // Tipo real da API — substitui o import do mock
 interface ChallengeTeam {
@@ -11,17 +13,6 @@ interface ChallengeTeam {
   raiting?: number;
 }
 
-interface Challenge {
-  id: string;
-  title: string;
-  location: string;
-  gameType: string;
-  scheduledAt: string;
-  status: string;
-  team: ChallengeTeam;
-  pendingRequests?: number;
-}
-
 const statusStyles: Record<string, string> = {
   OPEN: "bg-primary/15 text-primary border-primary/30",
   CLOSED: "bg-muted text-muted-foreground border-border",
@@ -29,7 +20,7 @@ const statusStyles: Record<string, string> = {
 };
 
 const getInitials = (name: string) =>
-  name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+  name?.split(" ")?.map(w => w[0])?.slice(0, 2)?.join("").toUpperCase();
 
 const formatDate = (iso: string) => {
   const d = new Date(iso);
@@ -39,49 +30,51 @@ const formatDate = (iso: string) => {
   };
 };
 
-export const ChallengeCard = ({ c, to }: { c: Challenge; to?: string }) => {
-  const initials = getInitials(c.team.name);
-  const { date, time } = formatDate(c.scheduledAt);
+interface IChallangeCardProps {
+  challenge: Challenge,
+  to?: string
+}
+
+export const ChallengeCard = ({ challenge, to }: IChallangeCardProps) => {
+  const initials = getInitials(challenge.title ?? "");
+
+  const { date, time } = formatDate(challenge.scheduledAt ? challenge.scheduledAt.toString() : "");
 
   return (
     <Link
-      to={to ?? `/app/challenge/${c.id}`}
+      to={to ?? `/app/challenge/${challenge.id}`}
       className="group block rounded-3xl bg-gradient-card p-5 shadow-card border border-border/60 transition-smooth hover:border-primary/50 hover:shadow-elevated animate-slide-up"
     >
       <div className="flex items-start gap-4">
         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl font-display text-2xl text-background shadow-card bg-gradient-primary overflow-hidden">
-          {c.team.emblemUrl ? (
-            <img src={c.team.emblemUrl} alt={c.team.name} className="h-full w-full object-cover" />
-          ) : (
-            initials
-          )}
+          {getInitials(challenge.title ?? "")}
         </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
-            <h3 className="font-display text-xl truncate">{c.team.name}</h3>
+            <h3 className="font-display text-xl truncate">{challenge.title ?? ""}</h3>
             <span className={cn(
               "rounded-full border px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider",
-              statusStyles[c.status] ?? "bg-muted text-foreground border-border"
+              statusStyles[challenge.status] ?? "bg-muted text-foreground border-border"
             )}>
-              {c.status}
+              {challenge.status}
             </span>
           </div>
 
-          {c.team.raiting !== undefined && (
+          {/* {challenge.team?.raiting !== undefined && (
             <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
               <Star className="h-3 w-3 fill-warning text-warning" />
               <span className="font-semibold text-foreground">
-                {Number(c.team.raiting).toFixed(1)}
+                {Number(challenge.team.raiting).toFixed(1)}
               </span>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 
       <div className="mt-4 flex items-center gap-2 flex-wrap">
         <span className="rounded-lg bg-primary/15 px-3 py-1.5 text-sm font-display text-primary">
-          {c.gameType}
+          {challenge.gameType}
         </span>
         <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Calendar className="h-3.5 w-3.5" /> {date} · {time}
@@ -89,15 +82,15 @@ export const ChallengeCard = ({ c, to }: { c: Challenge; to?: string }) => {
       </div>
 
       <div className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-        <MapPin className="h-3.5 w-3.5" /> {c.location}
+        <MapPin className="h-3.5 w-3.5" /> {challenge.location}
       </div>
 
-      {c.pendingRequests ? (
+      {/* {challenge.pendingRequests ? (
         <div className="mt-3 inline-flex items-center gap-2 rounded-full bg-accent/15 px-3 py-1 text-xs font-bold text-accent">
           <span className="h-2 w-2 rounded-full bg-accent animate-pulse" />
-          {c.pendingRequests} pedidos pendentes
+          {challenge.pendingRequests} pedidos pendentes
         </div>
-      ) : null}
+      ) : null} */}
     </Link>
   );
 };
