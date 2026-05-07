@@ -1,19 +1,13 @@
-import { useState, useEffect } from "react";
-import { Bell, Filter, Search, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Bell, Filter, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import { challenges, type GameType } from "@/data/mock";
 import { ChallengeCard } from "@/components/ChallengeCard";
 import { cn } from "@/lib/utils";
 
-type GameType = "5v5" | "7v7" | "11v11";
 const TYPES: (GameType | "ALL")[] = ["ALL", "5v5", "7v7", "11v11"];
 
-// Mapeia label visual → valor do enum no Prisma
-const GAMETYPE_MAP: Record<string, string> = {
-  "5v5": "v5v5",
-  "7v7": "v7v7",
-  "11v11": "v11v11",
-};
-
+// Mapeia ownerRole → label de saudação
 const ROLE_LABEL: Record<string, string> = {
   CAPTAIN: "Capitão",
   COACH: "Treinador",
@@ -22,56 +16,28 @@ const ROLE_LABEL: Record<string, string> = {
 const Feed = () => {
   const [type, setType] = useState<GameType | "ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [challenges, setChallenges] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
+  // Lê do cache — mesmo padrão do Profile
   const userData = (() => {
     try {
       const saved = localStorage.getItem("user_data");
       return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
+    } catch {
+      return null;
+    }
   })();
 
-  const ownerRole = userData?.teams?.[0]?.ownerRole ?? userData?.team?.ownerRole;
-  const greeting = ownerRole
-    ? `Olá, ${ROLE_LABEL[ownerRole] ?? ownerRole} 👊`
-    : "Olá 👊";
+  const ownerRole = userData?.teams?.[0]?.ownerRole;
+  const roleLabel = ownerRole ? (ROLE_LABEL[ownerRole] ?? ownerRole) : null;
+  const greeting = roleLabel ? `Olá, ${roleLabel} 👊` : "Olá 👊";
 
-  useEffect(() => {
-    const fetchFeed = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem("access_token");
-        const params = new URLSearchParams();
-
-        const province = userData?.teams?.[0]?.province ?? userData?.team?.province;
-        if (province) params.append("province", province);
-
-        // ← usa o valor do enum, não o label visual
-        if (type !== "ALL") params.append("gameType", GAMETYPE_MAP[type]);
-
-        const res = await fetch(`http://localhost:8080/challenges/feed?${params}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setChallenges(data);
-        }
-      } catch (e) {
-        console.error("Erro ao carregar feed:", e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFeed();
-  }, [type]);
-
-  const filtered = challenges.filter(c =>
-    c.team?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.location?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filtered = challenges.filter(c => {
+    const matchesType = type === "ALL" || c.type === type;
+    const matchesSearch =
+      c.team.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.location.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesType && matchesSearch;
+  });
 
   return (
     <div>
@@ -129,17 +95,7 @@ const Feed = () => {
         </div>
 
         <div className="mt-3 space-y-3">
-          {isLoading ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          ) : filtered.length === 0 ? (
-            <p className="text-center text-sm text-muted-foreground py-10">
-              Nenhum desafio disponível na tua zona.
-            </p>
-          ) : (
-            filtered.map(c => <ChallengeCard key={c.id} c={c} />)
-          )}
+          {filtered.map(c => <ChallengeCard key={c.id} c={c} />)}
         </div>
       </div>
     </div>

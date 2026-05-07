@@ -1,0 +1,14 @@
+{
+          "openapi": "3.0.0",
+          "paths": {
+            "/auth/login": {
+              "post": {
+                "operationId": "AuthController_login",
+                "parameters": [],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/LoginDto"
+                      }

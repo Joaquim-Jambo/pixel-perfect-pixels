@@ -13,7 +13,7 @@ const ICONS = {
 const Notifications = () => {
   return (
     <div>
-      <ScreenHeader title="Alertas" subtitle={`${notifications.filter(n => n.unread).length} não lidas`} />
+      <ScreenHeader title="Alertas" subtitle={`${notifications.filter(n => n.unread).length} não lidas`} back />
 
       <div className="px-5 space-y-2">
         {notifications.map(n => {
