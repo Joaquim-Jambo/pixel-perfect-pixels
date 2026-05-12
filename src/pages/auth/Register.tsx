@@ -3,9 +3,12 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Register = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,37 +19,28 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8080/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          name, 
-          email, 
-          passwordHash: password, // As per API docs RegisterDto
-          confirmPassword: password 
-        }),
-        credentials: "include", // ← ISTO PERMITE RECEBER E SALVAR O COOKIE
+      // 1. Criar a conta
+      await api.post("/auth/register", {
+        name,
+        email,
+        passwordHash: password,
+        confirmPassword: password
       });
 
-      if (!response.ok) {
-        throw new Error("Erro no registo. Tenta novamente.");
-      }
-
-      const data = await response.json();
-      console.log(data)
-      if (data.access_token) {
-        localStorage.setItem("access_token", data.access_token);
-      }
-      if (data.refresh_token || data.refreh_token) {
-        localStorage.setItem("refresh_token", data.refresh_token || data.refreh_token);
-      }
+      // 2. Fazer login automático para obter o access_token e o cookie refreshToken
+      const loginRes = await api.post("/auth/login", { email, password });
+      const data = loginRes.data;
+      const accessToken = data.access_token || data.accessToken;
+      
+      const userData = data.user || { id: "temp_id", name, email };
+      
+      // Esperar que o login preencha o contexto (e faça o fetch do /users/me)
+      await login(userData, accessToken);
       
       toast.success("Conta criada com sucesso!");
       navigate("/auth/create-team");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao criar conta. Tenta novamente.");
+      toast.error(error.response?.data?.message || "Erro ao criar conta. Tenta novamente.");
     } finally {
       setIsLoading(false);
     }

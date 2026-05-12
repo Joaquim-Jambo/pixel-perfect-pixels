@@ -5,9 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { Loader2, UploadCloud, UserCircle, Shield } from "lucide-react";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function EditProfile() {
   const navigate = useNavigate();
+  const { user, updateUser } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
   // States User
@@ -23,29 +26,18 @@ export default function EditProfile() {
   const [teamEmblemPreview, setTeamEmblemPreview] = useState<string | null>(null);
 
   useEffect(() => {
-    // Load initial data
-    const saved = localStorage.getItem("user_data");
-    if (saved) {
-      const data = JSON.parse(saved);
-      setUserName(data.name || "");
-      if (data.avatarUrl) setAvatarPreview(data.avatarUrl);
+    if (user) {
+      setUserName(user.name || "");
+      if (user.avatarUrl) setAvatarPreview(user.avatarUrl);
 
-      if (data.teams && data.teams.length > 0) {
+      if (user.teams && user.teams.length > 0) {
         setHasTeam(true);
-        setTeamId(data.teams[0].id);
-        setTeamName(data.teams[0].name || "");
-        if (data.teams[0].emblemUrl) setTeamEmblemPreview(data.teams[0].emblemUrl);
+        setTeamId(user.teams[0].id);
+        setTeamName(user.teams[0].name || "");
+        if (user.teams[0].emblemUrl) setTeamEmblemPreview(user.teams[0].emblemUrl);
       }
     }
-  }, []);
-
-  const getHeaders = (isJson = false) => {
-    const accessToken = localStorage.getItem("access_token");
-    const headers: HeadersInit = {};
-    if (accessToken) headers["Authorization"] = `Bearer ${accessToken}`;
-    if (isJson) headers["Content-Type"] = "application/json";
-    return headers;
-  };
+  }, [user]);
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -67,38 +59,31 @@ export default function EditProfile() {
     e.preventDefault();
     setIsLoading(true);
     let success = false;
+    let updatedUserData: any = {};
 
     try {
       if (avatarFile) {
         const formData = new FormData();
         formData.append("file", avatarFile);
-        const res = await fetch("http://localhost:8080/users/me/avatar", {
-          method: "PATCH",
-          headers: getHeaders(false),
-          credentials: "include",
-          body: formData,
+        const res = await api.patch("/users/me/avatar", formData, {
+          headers: { "Content-Type": "multipart/form-data" }
         });
-        if (!res.ok) throw new Error("Erro ao atualizar o avatar.");
+        updatedUserData.avatarUrl = res.data.avatarUrl;
       }
 
       if (userName.trim()) {
-        const res = await fetch("http://localhost:8080/users", {
-          method: "PATCH",
-          headers: getHeaders(true),
-          credentials: "include",
-          body: JSON.stringify({ name: userName.trim() }),
-        });
-        if (!res.ok) throw new Error("Erro ao atualizar o nome do utilizador.");
+        const res = await api.patch("/users/me", { name: userName.trim() });
+        updatedUserData.name = res.data.name;
       }
 
       success = true;
       toast.success("Perfil de utilizador atualizado!");
     } catch (error: any) {
-      toast.error(error.message || "Ocorreu um erro no utilizador.");
+      toast.error(error.response?.data?.message || "Ocorreu um erro no utilizador.");
     } finally {
       setIsLoading(false);
       if (success) {
-        localStorage.removeItem("user_data");
+        updateUser(updatedUserData);
         navigate(-1);
       }
     }
@@ -114,35 +99,43 @@ export default function EditProfile() {
       if (teamEmblemFile) {
         const formData = new FormData();
         formData.append("file", teamEmblemFile);
-        const res = await fetch(`http://localhost:8080/teams/${teamId}/emblem`, {
-          method: "PATCH",
-          headers: getHeaders(false),
-          credentials: "include",
-          body: formData,
+        await api.patch(`/teams/${teamId}/emblem`, formData, {
+          headers: { "Content-Type": "multipart/form-data" }
         });
-        if (!res.ok) throw new Error("Erro ao atualizar emblema da equipa.");
       }
 
       if (teamName.trim()) {
-        const res = await fetch(`http://localhost:8080/teams/${teamId}`, {
-          method: "PATCH",
-          headers: getHeaders(true),
-          credentials: "include",
-          body: JSON.stringify({ name: teamName.trim() }),
-        });
-        if (!res.ok) throw new Error("Erro ao atualizar nome da equipa.");
+        await api.patch(`/teams/${teamId}`, { name: teamName.trim() });
       }
 
       success = true;
       toast.success("Perfil de equipa atualizado!");
     } catch (error: any) {
-      toast.error(error.message || "Ocorreu um erro na equipa.");
+      toast.error(error.response?.data?.message || "Ocorreu um erro na equipa.");
     } finally {
       setIsLoading(false);
       if (success) {
-        localStorage.removeItem("user_data");
+        // ideally fetch user again to get the updated team
+        api.get("/users/me").then(res => updateUser(res.data));
         navigate(-1);
       }
+    }
+  };
+
+  const handleDeleteTeam = async () => {
+    if (!hasTeam || !teamId) return;
+    if (!confirm("Tem a certeza que deseja apagar a equipa? Esta ação é irreversível.")) return;
+    
+    setIsLoading(true);
+    try {
+      await api.delete(`/teams/${teamId}`);
+      toast.success("Equipa apagada com sucesso!");
+      api.get("/users/me").then(res => updateUser(res.data));
+      navigate(-1);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Ocorreu um erro ao apagar a equipa.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -260,6 +253,17 @@ export default function EditProfile() {
                   className="w-full bg-gradient-primary shadow-glow transition-all active:scale-[0.98]"
                 >
                   {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : "Guardar Equipa"}
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  disabled={isLoading}
+                  onClick={handleDeleteTeam}
+                  className="w-full text-destructive border-destructive hover:bg-destructive/10 mt-2"
+                >
+                  Apagar Equipa
                 </Button>
               </form>
             </TabsContent>

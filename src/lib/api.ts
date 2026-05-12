@@ -1,70 +1,68 @@
-// src/lib/api.ts
-const API_URL = "http://localhost:8080";
+import axios from "axios";
 
-interface FetchOptions extends RequestInit {
-  requiresAuth?: boolean;
-}
+// Permite usar a env VITE_API_URL, ou usar fallback para localhost
+export const baseURL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-export async function fetchWithAuth(endpoint: string, options: FetchOptions = {}) {
-  const { requiresAuth = true, ...customOptions } = options;
-  const url = endpoint.startsWith("http") ? endpoint : `${API_URL}${endpoint}`;
-  
-  const headers = new Headers(customOptions.headers);
+export const api = axios.create({
+  baseURL,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-  if (requiresAuth) {
+// Interceptor para adicionar o token de acesso aos requests
+api.interceptors.request.use(
+  (config) => {
     const token = localStorage.getItem("access_token");
     if (token) {
-      headers.set("Authorization", `Bearer ${token}`);
+      config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
+);
 
-  const response = await fetch(url, {
-    ...customOptions,
-    headers,
-  });
+// Interceptor para gerir respostas e refresh de token / erros 401
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
 
-  if (response.status === 401 && requiresAuth) {
-    // Access token expired, try to refresh it
-    const refreshToken = localStorage.getItem("refresh_token");
-    if (refreshToken) {
+    // Se o erro for 401 e não for a rota de login nem a de refresh
+    if (error.response?.status === 401 && !originalRequest.url?.includes("/auth/") && !originalRequest.url?.includes("/refresh") && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
       try {
-        const refreshResponse = await fetch(`${API_URL}/refresh`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${refreshToken}`
-          },
-          body: JSON.stringify({ refresh_token: refreshToken }), // Opcional, caso a API espere no body
-          credentials: "include" // Caso a API espere nos cookies
+        // Tentativa de refresh (agora usa o cookie httpOnly automaticamente se withCredentials for true)
+        const refreshResponse = await axios.post(`${baseURL}/auth/refresh`, {}, {
+          withCredentials: true
         });
-
-        if (refreshResponse.ok) {
-          const data = await refreshResponse.json();
-          // Assuming the data contains the new tokens
+        
+        if (refreshResponse.status === 200 || refreshResponse.status === 201) {
+          const data = refreshResponse.data;
           const newAccessToken = data.access_token || data.accessToken;
-          const newRefreshToken = data.refresh_token || data.refreshToken || data.refreh_token;
 
           if (newAccessToken) localStorage.setItem("access_token", newAccessToken);
-          if (newRefreshToken) localStorage.setItem("refresh_token", newRefreshToken);
 
-          // Retry the original request with the new access token
-          headers.set("Authorization", `Bearer ${newAccessToken}`);
-          return fetch(url, {
-            ...customOptions,
-            headers,
-          });
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return api(originalRequest);
         }
-      } catch (error) {
-        // Failed to refresh token
-        console.error("Token refresh failed:", error);
+      } catch (refreshError) {
+        console.error("Token refresh failed:", refreshError);
+      }
+
+      // Se falhar o refresh
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("user_data");
+      
+      if (!window.location.pathname.includes('/auth/')) {
+        window.location.href = "/auth/login";
       }
     }
-    
-    // If refresh failed or no refresh token, log out
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    window.location.href = "/auth/login";
-  }
 
-  return response;
-}
+    return Promise.reject(error);
+  }
+);

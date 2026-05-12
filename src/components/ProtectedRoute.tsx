@@ -1,15 +1,21 @@
 import { Navigate, Outlet } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 export const ProtectedRoute = () => {
-  const accessToken = localStorage.getItem("access_token");
-  const refreshToken = localStorage.getItem("refresh_token");
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Se não houver acesso nem token de refresh, redireciona para a página de login
-  if (!accessToken && !refreshToken) {
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  // Se houver pelo menos um dos tokens, tentamos renderizar a aplicação
-  // (Caso o access_token falte durante uma chamada, o interceptor da API tentará renová-lo)
   return <Outlet />;
 };

@@ -15,4 +15,9 @@ export type Challenge = {
   status: ChallengeStatus
   createdAt: Date | null
   updatedAt: Date | null
+  team?: {
+    name?: string
+    emblemUrl?: string | null
+    [key: string]: any
+  } | null
 }

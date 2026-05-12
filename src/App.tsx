@@ -21,6 +21,7 @@ import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 
 import EditProfile from "./pages/EditProfile";
+import { AuthProvider } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -30,8 +31,9 @@ const App = () => {
       <TooltipProvider>
         <Toaster />
         <Sonner theme="dark" position="top-center"/>
-        <BrowserRouter>
-          <Routes>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
             <Route path="/" element={<Splash />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/auth/login" element={<Login />} />
@@ -55,6 +57,7 @@ const App = () => {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

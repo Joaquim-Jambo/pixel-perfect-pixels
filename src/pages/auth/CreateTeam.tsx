@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, UserCircle2, Users, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 type OwnerRoleType = "CAPTAIN" | "COACH";
 
@@ -16,6 +18,7 @@ const PROVINCES = [
 
 const CreateTeam = () => {
   const navigate = useNavigate();
+  const { user, updateUser } = useAuth();
   const [ownerRole, setOwnerRole] = useState<OwnerRoleType | null>(null);
   const [teamName, setTeamName] = useState("");
   const [province, setProvince] = useState("");
@@ -28,39 +31,26 @@ const CreateTeam = () => {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem("access_token");
-      console.log(token);
-      const response = await fetch("http://localhost:8080/teams/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`, // ← backend extrai o userId daqui
-        },
-        body: JSON.stringify({
-          name: teamName.trim(),
-          ownerRole,
-          province, // ← campo novo
-        }),
+      const response = await api.post("/teams/", {
+        name: teamName.trim(),
+        ownerRole,
+        province,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || "Erro ao criar equipa.");
+      const data = response.data;
+
+      // Actualiza o cache com a equipa criada usando o Context
+      if (user) {
+        updateUser({
+          teams: user.teams ? [...user.teams, data] : [data],
+          team: data
+        });
       }
-
-      const data = await response.json();
-
-      // Actualiza o cache com a equipa criada
-      const userData = JSON.parse(localStorage.getItem("user_data") || "{}");
-      localStorage.setItem("user_data", JSON.stringify({
-        ...userData,
-        team: data,
-      }));
 
       toast.success("Equipa criada com sucesso!");
       navigate("/app");
     } catch (error: any) {
-      toast.error(error.message || "Erro ao criar equipa.");
+      toast.error(error.response?.data?.message || "Erro ao criar equipa.");
     } finally {
       setIsLoading(false);
     }

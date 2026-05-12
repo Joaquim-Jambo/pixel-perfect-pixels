@@ -4,13 +4,66 @@ import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
-import type { GameType } from "@/data/mock";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-const TYPES: GameType[] = ["5v5", "7v7", "11v11"];
+type UIGameType = "5v5" | "7v7" | "11v11";
+const TYPES: UIGameType[] = ["5v5", "7v7", "11v11"];
+const GAMETYPE_MAP: Record<string, string> = {
+  "5v5": "v5v5",
+  "7v7": "v7v7",
+  "11v11": "v11v11",
+};
 
 const CreateChallenge = () => {
   const nav = useNavigate();
-  const [type, setType] = useState<GameType>("7v7");
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const [type, setType] = useState<UIGameType>("7v7");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [location, setLocation] = useState("");
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await api.post("/challenges", payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      toast.success("Desafio publicado!");
+      queryClient.invalidateQueries({ queryKey: ["challenges"] });
+      nav("/app/games");
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Erro ao publicar desafio.");
+    }
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!title || !location || !date || !time) return;
+
+    // Combine date and time to ISO 8601
+    const scheduledAt = new Date(`${date}T${time}`).toISOString();
+    
+    const province = user?.teams?.[0]?.province || user?.team?.province || "Desconhecido";
+
+    mutation.mutate({
+      title,
+      description,
+      location,
+      latitude: 0, // Fallback
+      longitude: 0, // Fallback
+      gameType: GAMETYPE_MAP[type],
+      scheduledAt,
+      province,
+    });
+  };
 
   return (
     <div>
@@ -18,30 +71,26 @@ const CreateChallenge = () => {
 
       <form
         className="px-5 pb-10 space-y-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          toast.success("Desafio publicado!");
-          nav("/app/games");
-        }}
+        onSubmit={handleSubmit}
       >
         <Field label="Título">
-          <input required placeholder="Ex: Sábado à noite, jogo intenso" className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
+          <input required value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Sábado à noite, jogo intenso" className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
         </Field>
 
         <Field label="Descrição (opcional)">
-          <textarea rows={3} placeholder="Detalhes do desafio..." className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15 resize-none" />
+          <textarea rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Detalhes do desafio..." className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15 resize-none" />
         </Field>
 
         <Field label="Local">
-          <input required placeholder="Campo, pavilhão..." className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
+          <input required value={location} onChange={e => setLocation(e.target.value)} placeholder="Campo, pavilhão..." className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Data">
-            <input required type="date" className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
+            <input required type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
           </Field>
           <Field label="Hora">
-            <input required type="time" className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
+            <input required type="time" value={time} onChange={e => setTime(e.target.value)} className="w-full bg-input border border-border rounded-2xl px-4 py-3.5 text-[0.95rem] text-foreground outline-none transition-all duration-200 focus:border-primary focus:ring-[3px] focus:ring-primary/15" />
           </Field>
         </div>
 
@@ -66,8 +115,8 @@ const CreateChallenge = () => {
           </div>
         </div>
 
-        <Button type="submit" variant="hero" size="lg" className="w-full !mt-8">
-          Publicar desafio
+        <Button type="submit" variant="hero" size="lg" className="w-full !mt-8" disabled={mutation.isPending}>
+          {mutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Publicar desafio"}
         </Button>
       </form>
     </div>

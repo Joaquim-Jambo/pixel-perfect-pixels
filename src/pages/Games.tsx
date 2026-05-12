@@ -2,28 +2,33 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { ChallengeCard } from "@/components/ChallengeCard";
-import { myChallenges, myMatches, requests } from "@/data/mock";
 import { cn } from "@/lib/utils";
-import { Calendar, MapPin, Check, X, Star } from "lucide-react";
+import { Calendar, MapPin, Check, X, Star, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Challenge } from "@/types/Challenge";
-import axios from 'axios'
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { format } from "date-fns";
 
 type Tab = "challenges" | "matches" | "requests";
 
 const Games = () => {
+  const { user } = useAuth();
   const [tab, setTab] = useState<Tab>("challenges");
-  const [challenges, setChallenges] = useState<Challenge[]>([]);
+  
+  const myTeamId = user?.teams?.[0]?.id;
 
-  async function getChallenges() {
-    const response = await axios.get<Challenge[]>('http://localhost:8080/challenges');
-    console.log(response.data)
-    setChallenges(response.data);
-  }
+  const { data: allChallenges = [], isLoading } = useQuery({
+    queryKey: ['all_challenges'],
+    queryFn: async () => {
+      const response = await api.get<Challenge[]>('/challenges');
+      return response.data;
+    }
+  });
 
-  useEffect(() => {
-    getChallenges();
-  }, []);
+  const myChallenges = allChallenges.filter(c => c.teamId === myTeamId && c.status === "OPEN");
+  const myMatches = allChallenges.filter(c => c.teamId === myTeamId && c.status === "CLOSED");
 
   return (
     <div>
@@ -34,7 +39,7 @@ const Games = () => {
           {([
             ["challenges", "Desafios"],
             ["matches", "Jogos"],
-            ["requests", `Pedidos${requests.length ? ` (${requests.length})` : ""}`],
+            ["requests", `Pedidos`],
           ] as [Tab, string][]).map(([key, label]) => (
             <button
               key={key}
@@ -50,34 +55,40 @@ const Games = () => {
         </div>
 
         <div className="mt-5 space-y-3">
-          {tab === "challenges" && (
-            challenges.length > 0 ? challenges.map(challenge => <ChallengeCard key={challenge.id} challenge={challenge} />) 
-            :
-            <p className="text-muted-foreground">Não há desafios disponíveis.</p>
-          )}
-          {tab === "matches" && myMatches.map(m => (
-            <div key={m.id} className="rounded-3xl bg-gradient-card p-5 border border-border/60 shadow-card animate-slide-up">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-wider text-muted-foreground">vs</p>
-                  <h3 className="font-display text-2xl mt-0.5">{m.opponent}</h3>
-                </div>
-                <span className="rounded-full border border-primary/30 bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase text-primary">
-                  {m.status}
-                </span>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />{m.date} · {m.time}</span>
-                <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{m.location}</span>
-              </div>
-              <div className="mt-3 flex items-center justify-between">
-                <span className="rounded-lg bg-primary/15 px-3 py-1 text-sm font-display text-primary">{m.type}</span>
-                <Button size="sm" variant="outline" asChild>
-                  <Link to={`/app/match/${m.id}`}>Ver Partida</Link>
-                </Button>
-              </div>
+          {isLoading ? (
+            <div className="flex justify-center py-10">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ))}
+          ) : tab === "challenges" ? (
+            myChallenges.length > 0 ? myChallenges.map(challenge => <ChallengeCard key={challenge.id} challenge={challenge} />) 
+            :
+            <p className="text-muted-foreground text-center py-8">Não tens desafios abertos.</p>
+          ) : null}
+          {tab === "matches" && (
+            myMatches.length > 0 ? myMatches.map(m => (
+              <div key={m.id} className="rounded-3xl bg-gradient-card p-5 border border-border/60 shadow-card animate-slide-up">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-muted-foreground">Adversário</p>
+                    <h3 className="font-display text-2xl mt-0.5">{m.title || "Jogo"}</h3>
+                  </div>
+                  <span className="rounded-full border border-primary/30 bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase text-primary">
+                    {m.status}
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" />{format(new Date(m.scheduledAt), "dd/MM/yyyy · HH:mm")}</span>
+                  <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{m.location}</span>
+                </div>
+                <div className="mt-3 flex items-center justify-between">
+                  <span className="rounded-lg bg-primary/15 px-3 py-1 text-sm font-display text-primary">{m.gameType}</span>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to={`/app/match/${m.id}`}>Ver Partida</Link>
+                  </Button>
+                </div>
+              </div>
+            )) : <p className="text-muted-foreground text-center py-8">Não tens jogos agendados.</p>
+          )}
           {/* {tab === "requests" && requests.map(r => {
             const initials = r?.team?.split(" ").map(w => w[0]).slice(0, 2).join("");
             return (

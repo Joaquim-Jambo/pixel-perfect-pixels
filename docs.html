@@ -1,0 +1,749 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Scalar API Reference</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <!-- Load the Script -->
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+
+    <!-- Initialize the Scalar API Reference -->
+    <script type="text/javascript">
+      Scalar.createApiReference('#app', {
+        "_integration": "nestjs",
+        "content": {
+          "openapi": "3.0.0",
+          "paths": {
+            "/auth/login": {
+              "post": {
+                "operationId": "AuthController_login",
+                "parameters": [],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/LoginDto"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "User successfully logged in.",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "$ref": "#/components/schemas/ResponseLoginDto"
+                        }
+                      }
+                    }
+                  },
+                  "401": {
+                    "description": "Unauthorized.",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "$ref": "#/components/schemas/UnauthorizedDto"
+                        }
+                      }
+                    }
+                  }
+                },
+                "tags": [
+                  "Auth"
+                ]
+              }
+            },
+            "/auth/register": {
+              "post": {
+                "operationId": "AuthController_register",
+                "parameters": [],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/RegisterDto"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "User successfully registered.",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "$ref": "#/components/schemas/ResponseRegisterDto"
+                        }
+                      }
+                    }
+                  },
+                  "400": {
+                    "description": "Bad Request."
+                  }
+                },
+                "tags": [
+                  "Auth"
+                ]
+              }
+            },
+            "/auth/logout": {
+              "post": {
+                "operationId": "AuthController_logout",
+                "parameters": [],
+                "responses": {
+                  "200": {
+                    "description": "User successfully logged out."
+                  },
+                  "404": {
+                    "description": "Refresh token not found."
+                  }
+                },
+                "tags": [
+                  "Auth"
+                ]
+              }
+            },
+            "/auth/refresh": {
+              "post": {
+                "operationId": "AuthController_refresh",
+                "parameters": [],
+                "responses": {
+                  "200": {
+                    "description": ""
+                  }
+                },
+                "tags": [
+                  "Auth"
+                ]
+              }
+            },
+            "/users/me": {
+              "get": {
+                "operationId": "UsersController_me",
+                "parameters": [],
+                "responses": {
+                  "200": {
+                    "description": "Returns the current user."
+                  },
+                  "400": {
+                    "description": "Bad Request."
+                  }
+                },
+                "tags": [
+                  "User"
+                ]
+              }
+            },
+            "/users/me/challenges": {
+              "get": {
+                "operationId": "UsersController_myChallenges",
+                "parameters": [],
+                "responses": {
+                  "200": {
+                    "description": ""
+                  }
+                },
+                "tags": [
+                  "User"
+                ]
+              }
+            },
+            "/users": {
+              "patch": {
+                "operationId": "UsersController_update",
+                "parameters": [],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/updateUserDto"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": ""
+                  }
+                },
+                "tags": [
+                  "User"
+                ]
+              }
+            },
+            "/users/me/avatar": {
+              "patch": {
+                "operationId": "UsersController_updateAvatar",
+                "parameters": [],
+                "responses": {
+                  "200": {
+                    "description": "Updates the current user avatar."
+                  },
+                  "400": {
+                    "description": "Bad Request."
+                  }
+                },
+                "tags": [
+                  "User"
+                ]
+              }
+            },
+            "/teams": {
+              "post": {
+                "operationId": "TeamsController_create",
+                "parameters": [],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/CreateTeamDto"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Create a new team"
+                  },
+                  "400": {
+                    "description": "Bad request"
+                  }
+                },
+                "tags": [
+                  "Team"
+                ]
+              },
+              "get": {
+                "operationId": "TeamsController_findAll",
+                "parameters": [],
+                "responses": {
+                  "200": {
+                    "description": "Get all teams"
+                  }
+                },
+                "tags": [
+                  "Team"
+                ]
+              }
+            },
+            "/teams/{id}": {
+              "get": {
+                "operationId": "TeamsController_findOne",
+                "parameters": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Get a team by ID"
+                  },
+                  "404": {
+                    "description": "Team not found"
+                  }
+                },
+                "tags": [
+                  "Team"
+                ]
+              },
+              "patch": {
+                "operationId": "TeamsController_update",
+                "parameters": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/UpdateTeamDto"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Update a team"
+                  },
+                  "400": {
+                    "description": "Bad request"
+                  },
+                  "404": {
+                    "description": "Team not found"
+                  }
+                },
+                "tags": [
+                  "Team"
+                ]
+              },
+              "delete": {
+                "operationId": "TeamsController_remove",
+                "parameters": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Team successfully deleted"
+                  },
+                  "404": {
+                    "description": "Team not found"
+                  }
+                },
+                "tags": [
+                  "Team"
+                ]
+              }
+            },
+            "/teams/{id}/emblem": {
+              "patch": {
+                "operationId": "TeamsController_updateEmblem",
+                "parameters": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Update a team emblem"
+                  },
+                  "400": {
+                    "description": "Bad request"
+                  },
+                  "404": {
+                    "description": "Team not found"
+                  }
+                },
+                "tags": [
+                  "Team"
+                ]
+              }
+            },
+            "/challenges": {
+              "post": {
+                "operationId": "ChallengesController_create",
+                "parameters": [],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/CreateChallengeDto"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": ""
+                  }
+                },
+                "tags": [
+                  "Challenges"
+                ]
+              },
+              "get": {
+                "operationId": "ChallengesController_findAll",
+                "parameters": [],
+                "responses": {
+                  "200": {
+                    "description": ""
+                  }
+                },
+                "tags": [
+                  "Challenges"
+                ]
+              }
+            },
+            "/challenges/feed": {
+              "get": {
+                "operationId": "ChallengesController_feed",
+                "parameters": [],
+                "responses": {
+                  "200": {
+                    "description": ""
+                  }
+                },
+                "tags": [
+                  "Challenges"
+                ]
+              }
+            },
+            "/challenges/{id}": {
+              "get": {
+                "operationId": "ChallengesController_findOne",
+                "parameters": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": ""
+                  }
+                },
+                "tags": [
+                  "Challenges"
+                ]
+              },
+              "patch": {
+                "operationId": "ChallengesController_update",
+                "parameters": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "$ref": "#/components/schemas/UpdateChallengeDto"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": ""
+                  }
+                },
+                "tags": [
+                  "Challenges"
+                ]
+              },
+              "delete": {
+                "operationId": "ChallengesController_remove",
+                "parameters": [
+                  {
+                    "name": "id",
+                    "required": true,
+                    "in": "path",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": ""
+                  }
+                },
+                "tags": [
+                  "Challenges"
+                ]
+              }
+            }
+          },
+          "info": {
+            "title": "Onze API",
+            "description": "My API description",
+            "version": "1.0",
+            "contact": {}
+          },
+          "tags": [],
+          "servers": [],
+          "components": {
+            "schemas": {
+              "LoginDto": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "description": "User email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "User password"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              },
+              "ResponseLoginDto": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string"
+                  },
+                  "access_token": {
+                    "type": "string"
+                  },
+                  "refresh_token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "message",
+                  "access_token",
+                  "refresh_token"
+                ]
+              },
+              "UnauthorizedDto": {
+                "type": "object",
+                "properties": {
+                  "statusCode": {
+                    "type": "number",
+                    "example": 401,
+                    "description": "HTTP status code"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "Unauthorized",
+                    "description": "Error message"
+                  }
+                },
+                "required": [
+                  "statusCode",
+                  "message"
+                ]
+              },
+              "RegisterDto": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "passwordHash": {
+                    "type": "string"
+                  },
+                  "confirmPassword": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "email",
+                  "passwordHash",
+                  "confirmPassword"
+                ]
+              },
+              "ResponseRegisterDto": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "description": "Registration message"
+                  },
+                  "user": {
+                    "type": "object",
+                    "description": "Registered user details"
+                  },
+                  "refresh_token": {
+                    "type": "string"
+                  },
+                  "access_token": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "message",
+                  "user",
+                  "refresh_token",
+                  "access_token"
+                ]
+              },
+              "updateUserDto": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "passwordHash": {
+                    "type": "string"
+                  },
+                  "refreshToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "email",
+                  "passwordHash",
+                  "refreshToken"
+                ]
+              },
+              "CreateTeamDto": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "ownerId": {
+                    "type": "string"
+                  },
+                  "ownerRole": {
+                    "type": "string",
+                    "enum": [
+                      "CAPTAIN",
+                      "COACH"
+                    ]
+                  },
+                  "province": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "ownerId",
+                  "ownerRole"
+                ]
+              },
+              "UpdateTeamDto": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "ownerId": {
+                    "type": "string"
+                  },
+                  "ownerRole": {
+                    "type": "string",
+                    "enum": [
+                      "CAPTAIN",
+                      "COACH"
+                    ]
+                  },
+                  "province": {
+                    "type": "string"
+                  }
+                }
+              },
+              "CreateChallengeDto": {
+                "type": "object",
+                "properties": {
+                  "province": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  },
+                  "gameType": {
+                    "type": "string",
+                    "description": "Type of the game, e.g., 'v5v5', 'v7v7', 'v11v11'"
+                  },
+                  "scheduledAt": {
+                    "format": "date-time",
+                    "type": "string",
+                    "description": "Scheduled date and time for the challenge in ISO 8601 format, e.g., '2024-12-31T18:00:00Z'"
+                  }
+                },
+                "required": [
+                  "province",
+                  "title",
+                  "description",
+                  "location",
+                  "latitude",
+                  "longitude",
+                  "gameType",
+                  "scheduledAt"
+                ]
+              },
+              "UpdateChallengeDto": {
+                "type": "object",
+                "properties": {
+                  "province": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "location": {
+                    "type": "string"
+                  },
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  },
+                  "gameType": {
+                    "type": "string",
+                    "description": "Type of the game, e.g., 'v5v5', 'v7v7', 'v11v11'"
+                  },
+                  "scheduledAt": {
+                    "format": "date-time",
+                    "type": "string",
+                    "description": "Scheduled date and time for the challenge in ISO 8601 format, e.g., '2024-12-31T18:00:00Z'"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "theme": "deepSpace"
+      })
+    </script>
+  </body>
+</html>

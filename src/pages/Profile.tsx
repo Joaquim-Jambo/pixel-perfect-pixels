@@ -4,8 +4,9 @@ import { Star, Settings, LogOut, ChevronRight, Trophy, Users, Loader2 } from "lu
 import { useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils"; // Certifica-te que tens este helper ou usa a função no fim do ficheiro
-import { json } from "stream/consumers";
+import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 // 1. Definição de Tipos
 interface UserTeam {
@@ -28,14 +29,8 @@ interface UserData {
 
 const Profile = () => {
   const navigate = useNavigate();
-  
-  // Tenta carregar dados guardados para evitar UI vazia no refresh
-  const [user, setUser] = useState<UserData | null>(() => {
-    const saved = localStorage.getItem("user_data");
-    return saved ? JSON.parse(saved) : null;
-  });
-  
-  const [isLoading, setIsLoading] = useState(!user); // Só mostra loading total se não houver cache
+  const { user, logout, updateUser } = useAuth();
+  const [isLoading, setIsLoading] = useState(!user);
 
   // Função para extrair iniciais
   const getInitials = (name: string) => {
@@ -51,64 +46,30 @@ const Profile = () => {
 
   const fetchUserData = useCallback(async () => {
     try {
-      // Se não temos dados em cache, mostramos o loading
       if (!user) setIsLoading(true);
-
-      const accessToken = localStorage.getItem("access_token");
-
-      const headers: HeadersInit = {};
-      if (accessToken) {
-        headers["Authorization"] = `Bearer ${accessToken}`;
-      }
-
-      const response = await fetch("http://localhost:8080/users/me", {
-        method: "GET",
-        headers,
-        // CRUCIAL: Envia os cookies (refresh_token) automaticamente
-        credentials: "include", 
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Resposta do /users/me:", data);
-        setUser(data);
-        // Guarda no localStorage para o próximo refresh ser instantâneo
-        localStorage.setItem("user_data", JSON.stringify(data));
-      } else if (response.status === 401) {
-        // Se o back-end não conseguiu renovar com o cookie, limpa tudo
-        handleLogoutLocal();
-      }
+      const res = await api.get("/users/me");
+      updateUser(res.data);
     } catch (error) {
       console.error("Erro ao recuperar sessão:", error);
       toast.error("Sessão expirada. Por favor, faz login novamente.");
+      logout();
     } finally {
       setIsLoading(false);
     }
-  }, [user, navigate]);
+  }, [user, updateUser, logout]);
 
   useEffect(() => {
     fetchUserData();
-  }, []); // Executa apenas no mount
-
-  const handleLogoutLocal = () => {
-    localStorage.clear();
-    setUser(null);
-    navigate("/auth/login");
-  };
+  }, []);
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("access_token");
     try {
-      if (token) {
-        await fetch("http://localhost:8080/auth/logout", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${token}` },
-          credentials: "include" // Importante para o back limpar o cookie também
-        }).catch(() => {});
-      }
+      await api.post("/auth/logout");
+    } catch (e) {
+      console.error(e);
     } finally {
       toast.success("Sessão terminada");
-      handleLogoutLocal();
+      logout();
     }
   };
 

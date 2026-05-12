@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Bell, Filter, Search, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { ChallengeCard } from "@/components/ChallengeCard";
 import { cn } from "@/lib/utils";
 import { Challenge } from "@/types/Challenge";
-import axios, { AxiosError } from "axios";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 type GameType = "5v5" | "7v7" | "11v11";
 const TYPES: (GameType | "ALL")[] = ["ALL", "5v5", "7v7", "11v11"];
@@ -22,51 +24,40 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 const Feed = () => {
+  const { user: userData } = useAuth();
   const [type, setType] = useState<GameType | "ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
-  const [challenges, setChallenges] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const userData = (() => {
-    try {
-      const saved = localStorage.getItem("user_data");
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  })();
 
   const ownerRole = userData?.teams?.[0]?.ownerRole ?? userData?.team?.ownerRole;
   const greeting = ownerRole
     ? `Olá, ${ROLE_LABEL[ownerRole] ?? ownerRole} 👊`
     : "Olá 👊";
 
-  const fetchFeed = async () => {
-    setIsLoading(true);
-    try {
-      const token = localStorage.getItem("access_token");
+  const { data: challenges = [], isLoading } = useQuery({
+    queryKey: ["challenges", "feed", type, userData?.teams?.[0]?.province, userData?.team?.province],
+    queryFn: async () => {
       const params = new URLSearchParams();
       const province = userData?.teams?.[0]?.province ?? userData?.team?.province;
+      
       if (province) params.append("province", province);
       if (type !== "ALL") params.append("gameType", GAMETYPE_MAP[type]);
-      const res = await axios.get<Challenge[]>(`http://localhost:8080/challenges/feed?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setChallenges(res.data);
-    }
-    catch (e: any) {
-    console.error("Erro ao carregar feed:", e);
-  } finally {
-    setIsLoading(false);
-  }
-};
+      
+      const res = await api.get<Challenge[]>(`/challenges/feed?${params.toString()}`);
+      return res.data;
+    },
+  });
 
-  useEffect(() => {
-    fetchFeed();
-  }, [type]);
+const province = userData?.teams?.[0]?.province ?? userData?.team?.province;
 
-const filtered = challenges.filter(c =>
-  c.team?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-  c.location?.toLowerCase().includes(searchQuery.toLowerCase())
-);
+const filtered = challenges.filter(c => {
+  const matchesSearch = c.team?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        c.location?.toLowerCase().includes(searchQuery.toLowerCase());
+  
+  // Garantir que SÓ aparecem desafios da província do utilizador (se o utilizador tiver uma província definida)
+  const matchesProvince = province ? c.province === province : true;
+
+  return matchesSearch && matchesProvince;
+});
 
 return (
   <div>
