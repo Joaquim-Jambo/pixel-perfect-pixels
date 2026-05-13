@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Loader2, UploadCloud, UserCircle, Shield } from "lucide-react";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { AxiosError } from "axios";
 
 export default function EditProfile() {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ export default function EditProfile() {
     e.preventDefault();
     setIsLoading(true);
     let success = false;
-    let updatedUserData: any = {};
+    const updatedUserData: { avatarUrl?: string; name?: string } = {};
 
     try {
       if (avatarFile) {
@@ -78,8 +79,9 @@ export default function EditProfile() {
 
       success = true;
       toast.success("Perfil de utilizador atualizado!");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Ocorreu um erro no utilizador.");
+    } catch (error) {
+      const apiError = error as AxiosError<{ message?: string }>;
+      toast.error(apiError.response?.data?.message || apiError.message || "Ocorreu um erro no utilizador.");
     } finally {
       setIsLoading(false);
       if (success) {
@@ -110,8 +112,9 @@ export default function EditProfile() {
 
       success = true;
       toast.success("Perfil de equipa atualizado!");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Ocorreu um erro na equipa.");
+    } catch (error) {
+      const apiError = error as AxiosError<{ message?: string }>;
+      toast.error(apiError.response?.data?.message || apiError.message || "Ocorreu um erro na equipa.");
     } finally {
       setIsLoading(false);
       if (success) {
@@ -132,8 +135,9 @@ export default function EditProfile() {
       toast.success("Equipa apagada com sucesso!");
       api.get("/users/me").then(res => updateUser(res.data));
       navigate(-1);
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Ocorreu um erro ao apagar a equipa.");
+    } catch (error) {
+      const apiError = error as AxiosError<{ message?: string }>;
+      toast.error(apiError.response?.data?.message || apiError.message || "Ocorreu um erro ao apagar a equipa.");
     } finally {
       setIsLoading(false);
     }

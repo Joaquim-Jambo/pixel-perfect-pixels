@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { AxiosError } from "axios";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -32,8 +33,9 @@ const Login = () => {
 
       toast.success("Login efetuado com sucesso!");
       navigate("/app");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Erro ao fazer login. Verifica as credenciais.");
+    } catch (error) {
+      const apiError = error as AxiosError<{ message?: string }>;
+      toast.error(apiError.response?.data?.message || apiError.message || "Erro ao fazer login. Verifica as credenciais.");
     } finally {
       setIsLoading(false);
     }

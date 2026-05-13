@@ -8,8 +8,19 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { AxiosError } from "axios";
 
 type UIGameType = "5v5" | "7v7" | "11v11";
+type CreateChallengePayload = {
+  title: string;
+  description: string;
+  location: string;
+  latitude: number;
+  longitude: number;
+  gameType: string;
+  scheduledAt: string;
+  province: string;
+};
 const TYPES: UIGameType[] = ["5v5", "7v7", "11v11"];
 const GAMETYPE_MAP: Record<string, string> = {
   "5v5": "v5v5",
@@ -30,7 +41,7 @@ const CreateChallenge = () => {
   const [time, setTime] = useState("");
 
   const mutation = useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (payload: CreateChallengePayload) => {
       const res = await api.post("/challenges", payload);
       return res.data;
     },
@@ -39,7 +50,7 @@ const CreateChallenge = () => {
       queryClient.invalidateQueries({ queryKey: ["challenges"] });
       nav("/app/games");
     },
-    onError: (error: any) => {
+    onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message || "Erro ao publicar desafio.");
     }
   });

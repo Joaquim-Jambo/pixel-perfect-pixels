@@ -97,3 +97,134 @@ Gestão dos jogos/desafios entre as equipas.
 - **Remover Desafio** (`DELETE /challenges/:id`)
   - **Parâmetros de URL:** `id` do desafio.
   - **Ação:** Cancela ou exclui um desafio existente.
+
+  ## 4.1 Solicitações (Requests) — entrar/sair de um desafio
+
+  - **Criar solicitação (entrar num challenge)** (`POST /challenges/:id/requests`)
+    - **Cabeçalhos:** Requer Autenticação (Bearer `access_token`)
+    - **Parâmetros de URL:** `id` = `challengeId` (path)
+    - **Corpo da requisição (JSON):**
+      - `teamId` (string) — ID da equipa que está a solicitar
+    - **Ação:** Cria um registo em `requests` vinculando `teamId` ao `challengeId`.
+    - **Código de sucesso:** `201 Created` com objeto da solicitação criada.
+
+  - **Listar solicitações de um challenge** (`GET /challenges/:id/requests`)
+    - **Cabeçalhos:** Requer Autenticação (Bearer `access_token`)
+    - **Parâmetros de URL:** `id` = `challengeId`
+    - **Ação:** Retorna lista de solicitações para esse `challengeId`, incluindo dados da equipa.
+    - **Código de sucesso:** `200 OK`
+
+  - **Cancelar solicitação / Sair do challenge** (`DELETE /challenges/:id/requests`)
+    - **Cabeçalhos:** Requer Autenticação (Bearer `access_token`)
+    - **Parâmetros de URL:** `id` = `challengeId`
+    - **Corpo da requisição (JSON):**
+      - `teamId` (string) — ID da equipa que quer sair/cancelar a solicitação
+    - **Ação:** Remove a solicitação correspondente (`challengeId + teamId`).
+    - **Código de sucesso:** `200 OK` com o objeto removido
+
+  ---
+
+  ## 5. Contratos & DTOs (exemplos para o Frontend)
+
+  ### CreateChallengeDto (POST /challenges)
+  Exemplo de corpo (JSON):
+
+  {
+    "title": "Jogo amistoso",
+    "description": "Partida amigável ao fim-de-semana",
+    "location": "Campo da cidade",
+    "province": "Lisboa",            # opcional — herdado da equipa se omitido
+    "latitude": -9.142685,
+    "longitude": 38.736946,
+    "gameType": "v5v5",              # valores: v5v5 | v7v7 | v11v11
+    "scheduledAt": "2026-06-01T18:00:00.000Z"
+  }
+
+  Resposta (201): objeto `challenge` com campos como `id`, `title`, `scheduledAt`, `teamId`, `status`.
+
+  ### joinChallengeDto (POST /challenges/:id/requests)
+  Exemplo de corpo (JSON):
+
+  {
+    "teamId": "team-123"
+  }
+
+  Resposta (201):
+  {
+    "id": "request-abc",
+    "teamId": "team-123",
+    "challengeId": "challenge-456",
+    "status": "PENDING"
+  }
+
+  ### UpdateChallengeDto (PATCH /challenges/:id)
+  Mesmos campos que `CreateChallengeDto` mas todos opcionais.
+
+  ### Filter para feed (GET /challenges/feed)
+  - Query params:
+    - `province` (string)
+    - `gameType` (v5v5 | v7v7 | v11v11)
+    - `scheduledAt` (ISO datetime) — filtra por >=
+
+  ---
+
+  ## 6. Autenticação & Headers (o que o Frontend precisa)
+
+  - Para rotas que exigem autenticação (criar challenge, feed, join, listar requests, update/delete), envie o header:
+
+    Authorization: Bearer <access_token>
+
+  - O fluxo esperado:
+    1. `POST /auth/login` com `email` + `password` → retorna `access_token` (no body) e define cookie `refreshToken` (httpOnly).
+    2. Guardar `access_token` em memória (e.g., Redux or memory) e usar para chamadas autenticadas.
+    3. Quando o `access_token` expirar, chamar `POST /auth/refresh` (cookie `refreshToken` será enviado automaticamente pelo browser) para obter novo `access_token`.
+
+  Observação: Rotas públicas (ex: `GET /challenges`, `GET /challenges/:id`) não exigem header Authorization.
+
+  ---
+
+  ## 7. Erros comuns & Códigos HTTP
+
+  - 400 Bad Request — parâmetros ou body inválido
+  - 401 Unauthorized — token ausente/inválido
+  - 403 Forbidden — operação não autorizada (ex: editar desafio de outra equipa)
+  - 404 Not Found — recurso não encontrado (team, challenge, request)
+  - 409 Conflict — por exemplo, tentar criar uma solicitação duplicada
+
+  ---
+
+  ## 8. Exemplos curl rápidos
+
+  # Login
+  curl -i -X POST https://api.example.com/auth/login \
+    -H "Content-Type: application/json" \
+    -d '{"email":"user@example.com","password":"secret"}'
+
+  # Criar desafio (autenticado)
+  curl -i -X POST https://api.example.com/challenges \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $ACCESS_TOKEN" \
+    -d '@create-challenge.json'
+
+  # Entrar num desafio (criar request)
+  curl -i -X POST https://api.example.com/challenges/challenge-456/requests \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer $ACCESS_TOKEN" \
+    -d '{"teamId":"team-123"}'
+
+  # Listar requests de um challenge
+  curl -i -X GET "https://api.example.com/challenges/challenge-456/requests" \
+    -H "Authorization: Bearer $ACCESS_TOKEN"
+
+  ---
+
+  ## 9. Notas para o Frontend
+
+  - O backend usa `challenge.status` (OPEN / CLOSED / CANCELLED) para gerir visibilidade.
+  - No feed (`/challenges/feed`) o backend automaticamente exclui desafios criados pela equipa do utilizador autenticado.
+  - Para uploads (avatars/emblems) use `multipart/form-data` com campo `file`.
+  - Se precisar de um contrato TypeScript exato, posso gerar `interfaces`/`types` a partir das DTOs atuais.
+
+  ---
+
+  Se quiser, gero também os `types` TypeScript prontos para importar no Frontend e exemplos de chamadas com `fetch()`/`axios`.

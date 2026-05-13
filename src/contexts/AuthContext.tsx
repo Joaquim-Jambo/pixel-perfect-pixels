@@ -1,13 +1,20 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { api } from "@/lib/api";
+import { normalizeUser } from "@/lib/auth-user";
+
+interface UserTeam {
+  id: string;
+  [key: string]: unknown;
+}
 
 interface User {
   id: string;
   email: string;
   name?: string;
-  team?: any;
-  teams?: any[];
-  [key: string]: any;
+  avatarUrl?: string | null;
+  team?: UserTeam;
+  teams?: UserTeam[];
+  [key: string]: unknown;
 }
 
 interface AuthContextType {
@@ -32,24 +39,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const token = localStorage.getItem("access_token");
         const userDataStr = localStorage.getItem("user_data");
         
-        if (token) {
-          // 1. Mostrar os dados em cache para não haver ecrã branco/loading
-          if (userDataStr) {
-            setUser(JSON.parse(userDataStr));
-          }
-          // 2. Ir buscar os dados mais recentes à API, garantindo que temos tudo logo no arranque
-          try {
-            const res = await api.get("/users/me");
-            setUser(res.data);
-            localStorage.setItem("user_data", JSON.stringify(res.data));
-          } catch (apiError) {
-            console.error("Erro ao fazer refresh dos dados do utilizador na API:", apiError);
-          }
+        if (token && userDataStr) {
+          setUser(normalizeUser(JSON.parse(userDataStr)));
         }
       } catch (error) {
-        console.error("Erro ao carregar sessão:", error);
+        console.error("Erro ao carregar cache da sessão:", error);
       } finally {
         setIsLoading(false);
+      }
+
+      // 2. Fetch the latest data in the background
+      const currentToken = localStorage.getItem("access_token");
+      if (currentToken) {
+        try {
+          const res = await api.get("/users/me");
+          const normalizedUser = normalizeUser(res.data);
+          setUser(normalizedUser);
+          localStorage.setItem("user_data", JSON.stringify(normalizedUser));
+        } catch (apiError) {
+          console.error("Erro ao atualizar dados da API:", apiError);
+        }
       }
     };
     
@@ -57,20 +66,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (userData: User, accessToken: string) => {
-    // O token é gravado imediatamente para o axios o apanhar nos interceptors
     localStorage.setItem("access_token", accessToken);
+    const normalizedUser = normalizeUser(userData);
+    localStorage.setItem("user_data", JSON.stringify(normalizedUser));
+    setUser(normalizedUser); // Set user immediately so navigation to /app doesn't get blocked
     
     try {
-      // Como a API não retorna tudo no login, fazemos logo fetch do /users/me
       const res = await api.get("/users/me");
-      const realUser = res.data;
+      const realUser = normalizeUser(res.data);
       localStorage.setItem("user_data", JSON.stringify(realUser));
       setUser(realUser);
     } catch (error) {
-      // Em caso de falha, guarda pelo menos o dummy object retornado no login
       console.error("Erro ao ir buscar /users/me no login", error);
-      localStorage.setItem("user_data", JSON.stringify(userData));
-      setUser(userData);
     }
   };
 
@@ -83,7 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const updateUser = (userData: Partial<User>) => {
     setUser((prev) => {
-      const newUser = prev ? { ...prev, ...userData } : (userData as User);
+      const newUser = normalizeUser(prev ? { ...prev, ...userData } : (userData as User));
       localStorage.setItem("user_data", JSON.stringify(newUser));
       return newUser;
     });

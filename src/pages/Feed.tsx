@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Filter, Search, Loader2 } from "lucide-react";
+import { Bell, Calendar, Filter, Search, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ChallengeCard } from "@/components/ChallengeCard";
@@ -27,6 +27,7 @@ const Feed = () => {
   const { user: userData } = useAuth();
   const [type, setType] = useState<GameType | "ALL">("ALL");
   const [searchQuery, setSearchQuery] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
 
   const ownerRole = userData?.teams?.[0]?.ownerRole ?? userData?.team?.ownerRole;
   const greeting = ownerRole
@@ -34,13 +35,14 @@ const Feed = () => {
     : "Olá 👊";
 
   const { data: challenges = [], isLoading } = useQuery({
-    queryKey: ["challenges", "feed", type, userData?.teams?.[0]?.province, userData?.team?.province],
+    queryKey: ["challenges", "feed", type, scheduledAt, userData?.teams?.[0]?.province, userData?.team?.province],
     queryFn: async () => {
       const params = new URLSearchParams();
       const province = userData?.teams?.[0]?.province ?? userData?.team?.province;
       
       if (province) params.append("province", province);
       if (type !== "ALL") params.append("gameType", GAMETYPE_MAP[type]);
+      if (scheduledAt) params.append("scheduledAt", new Date(`${scheduledAt}T00:00:00`).toISOString());
       
       const res = await api.get<Challenge[]>(`/challenges/feed?${params.toString()}`);
       return res.data;
@@ -88,6 +90,25 @@ return (
         <button aria-label="Filtro de busca">
           <Filter className="h-4 w-4 text-primary" />
         </button>
+      </div>
+
+      <div className="mt-3 flex items-center gap-3 rounded-2xl bg-card/80 backdrop-blur px-4 py-3 border border-border/60">
+        <Calendar className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+        <input
+          type="date"
+          className="flex-1 bg-transparent text-sm outline-none text-foreground"
+          value={scheduledAt}
+          onChange={(e) => setScheduledAt(e.target.value)}
+        />
+        {scheduledAt ? (
+          <button
+            type="button"
+            className="text-xs font-bold uppercase tracking-wide text-primary"
+            onClick={() => setScheduledAt("")}
+          >
+            Limpar
+          </button>
+        ) : null}
       </div>
     </header>
 

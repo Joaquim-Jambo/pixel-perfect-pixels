@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { AxiosError } from "axios";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -39,8 +40,9 @@ const Register = () => {
       
       toast.success("Conta criada com sucesso!");
       navigate("/auth/create-team");
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || "Erro ao criar conta. Tenta novamente.");
+    } catch (error) {
+      const apiError = error as AxiosError<{ message?: string }>;
+      toast.error(apiError.response?.data?.message || apiError.message || "Erro ao criar conta. Tenta novamente.");
     } finally {
       setIsLoading(false);
     }

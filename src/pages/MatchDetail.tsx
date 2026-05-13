@@ -9,6 +9,7 @@ import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { Challenge } from "@/types/Challenge";
 import { format } from "date-fns";
+import { AxiosError } from "axios";
 
 const MatchDetail = () => {
   const { id } = useParams();
@@ -34,8 +35,8 @@ const MatchDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["all_challenges"] });
       nav("/app/games");
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || "Erro ao cancelar desafio.");
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error.response?.data?.message || error.message || "Erro ao cancelar desafio.");
     }
   });
 
