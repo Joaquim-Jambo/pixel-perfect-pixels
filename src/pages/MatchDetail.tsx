@@ -61,9 +61,14 @@ const MatchDetail = () => {
   const myColor = "#00E676";
   const myInitials = myTeam.split(" ").map(w => w[0]).slice(0, 2).join("");
   
-  const opponentName = match.status === "CLOSED" ? "Adversário Confirmado" : "A aguardar adversário...";
+  const hasAwayTeam = !!match.match?.awayTeam;
+  const opponentName = hasAwayTeam 
+    ? (match.match?.awayTeam?.name || "Adversário") 
+    : (match.status === "CLOSED" ? "Adversário Confirmado" : "A aguardar adversário...");
   const opponentColor = match.status === "CLOSED" ? "#2979FF" : "#555";
-  const opponentInitials = match.status === "CLOSED" ? "AD" : "?";
+  const opponentInitials = hasAwayTeam && match.match?.awayTeam?.name
+    ? match.match.awayTeam.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()
+    : (match.status === "CLOSED" ? "AD" : "?");
 
   const dateStr = format(new Date(match.scheduledAt), "dd/MM/yyyy");
   const timeStr = format(new Date(match.scheduledAt), "HH:mm");

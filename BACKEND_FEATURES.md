@@ -75,19 +75,19 @@ Gestão dos jogos/desafios entre as equipas.
 
 - **Criar Desafio** (`POST /challenges`)
   - **Corpo da requisição:** Dados do desafio (título, descrição, tipo de jogo, etc).
-  - **Ação:** Cria um novo desafio. Nota: Identifica a equipa criadora através do cookie `refreshToken`.
+  - **Ação:** Cria um novo desafio. Nota: Identifica a equipa criadora através do cookie `refreshToken` ou do Payload JWT.
 
 - **Feed de Desafios** (`GET /challenges/feed`)
   - **Cabeçalhos:** Requer Autenticação (Access Token JWT).
   - **Parâmetros de Query (Opcionais):** `province`, `gameType`, `scheduledAt`.
-  - **Ação:** Retorna o feed de desafios disponíveis, aplicando filtros de pesquisa e o contexto do usuário autenticado.
+  - **Ação:** Retorna o feed de desafios disponíveis, ativos e abertos (`#OPEN`), aplicando filtros de pesquisa e o contexto do usuário autenticado.
 
 - **Listar Todos os Desafios** (`GET /challenges`)
-  - **Ação:** Retorna uma lista global de todos os desafios criados.
+  - **Ação:** Retorna uma lista global de todos os desafios criados não deletados logicamente (`isActive: true`).
 
 - **Obter Desafio por ID** (`GET /challenges/:id`)
   - **Parâmetros de URL:** `id` do desafio.
-  - **Ação:** Retorna os detalhes completos de um desafio específico.
+  - **Ação:** Retorna os detalhes completos de um desafio específico válido/ativo.
 
 - **Atualizar Desafio** (`PATCH /challenges/:id`)
   - **Parâmetros de URL:** `id` do desafio.
@@ -96,13 +96,13 @@ Gestão dos jogos/desafios entre as equipas.
 
 - **Remover Desafio** (`DELETE /challenges/:id`)
   - **Parâmetros de URL:** `id` do desafio.
-  - **Ação:** Cancela ou exclui um desafio existente.
+  - **Ação:** Remove o desafio através de **Soft Delete** (`isActive: false`). O desafio continuará no banco de dados isolado por motivos de históricos, porém não aparecerá mais em listas.
 
   ## 4.1 Solicitações (Requests) — entrar/sair de um desafio
 
   - **Criar solicitação (entrar num challenge)** (`POST /challenges/:id/requests`)
     - **Cabeçalhos:** Requer Autenticação (Bearer `access_token`)
-    - **Parâmetros de URL:** `id` = `challengeId` (path)
+    - **Parâmetros de URL:** `id` = `challengeId`
     - **Corpo da requisição (JSON):**
       - `teamId` (string) — ID da equipa que está a solicitar
     - **Ação:** Cria um registo em `requests` vinculando `teamId` ao `challengeId`.
@@ -119,8 +119,8 @@ Gestão dos jogos/desafios entre as equipas.
     - **Parâmetros de URL:** `id` = `challengeId`
     - **Corpo da requisição (JSON):**
       - `teamId` (string) — ID da equipa que quer sair/cancelar a solicitação
-    - **Ação:** Remove a solicitação correspondente (`challengeId + teamId`).
-    - **Código de sucesso:** `200 OK` com o objeto removido
+    - **Ação:** Inativa (Soft Delete) a solicitação correspondente, definindo `isActive: false` para o `challengeId + teamId`.
+    - **Código de sucesso:** `200 OK` com o objeto atualizado
 
   ---
 
@@ -175,9 +175,11 @@ Gestão dos jogos/desafios entre as equipas.
     Authorization: Bearer <access_token>
 
   - O fluxo esperado:
-    1. `POST /auth/login` com `email` + `password` → retorna `access_token` (no body) e define cookie `refreshToken` (httpOnly).
+    1. `POST /auth/login` com `email` + `password` → retorna `access_token` (no body) e define cookie `refreshToken` (httpOnly). **O Access Token passa a expirar em 5 minutos**, sendo crucial implementar a lógica de Refresh eficientemente nas Responses/Axios Interceptors. O Payload do Access Token agora também devolve o `teamId`.
     2. Guardar `access_token` em memória (e.g., Redux or memory) e usar para chamadas autenticadas.
     3. Quando o `access_token` expirar, chamar `POST /auth/refresh` (cookie `refreshToken` será enviado automaticamente pelo browser) para obter novo `access_token`.
+
+  - **Documentação Interativa (Scalar/Swagger):** Agora há suporte para teste direto pela documentação da API em `/api/docs`. Se desejar testar qualquer rota com Auth no navegador, copie o token retornado no `Login` e cole no menu 'Authentication > Bearer' do Scalar.
 
   Observação: Rotas públicas (ex: `GET /challenges`, `GET /challenges/:id`) não exigem header Authorization.
 

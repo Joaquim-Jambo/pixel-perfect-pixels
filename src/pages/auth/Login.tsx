@@ -33,9 +33,13 @@ const Login = () => {
 
       toast.success("Login efetuado com sucesso!");
       navigate("/app");
-    } catch (error) {
-      const apiError = error as AxiosError<{ message?: string }>;
-      toast.error(apiError.response?.data?.message || apiError.message || "Erro ao fazer login. Verifica as credenciais.");
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "RateLimitError") {
+        toast.error("Muitas requisições. Tente novamente mais tarde.");
+      } else {
+        const apiError = error as AxiosError<{ message?: string }>;
+        toast.error(apiError.response?.data?.message || apiError.message || "Erro ao fazer login. Verifica as credenciais.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -48,7 +52,7 @@ const Login = () => {
       </button>
 
       <div className="flex flex-1 flex-col items-center justify-center pt-8">
-        <h1 className="font-display text-4xl mb-2 text-center">ENTRA NA ARENA</h1>
+        <h1 className="font-display text-3xl mb-2 text-center font-extrabold tracking-tight">Entra na Arena</h1>
         <p className="text-muted-foreground text-center mb-10 text-sm">Entra na tua conta do Onze.</p>
 
         <form className="w-full max-w-sm space-y-4" onSubmit={handleLogin}>

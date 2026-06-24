@@ -40,7 +40,7 @@ const CreateTeam = () => {
     setIsLoading(true);
 
     try {
-      const response = await api.post("/teams/", {
+      const response = await api.post("/teams", {
         name: teamName.trim(),
         ownerRole,
         province,

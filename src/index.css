@@ -4,51 +4,51 @@
 
 @layer base {
   :root {
-    /* Onze — dark sport theme */
-    --background: 0 0% 6%;
-    --foreground: 0 0% 98%;
+    /* Onze — friendly, professional dark green/blue theme */
+    --background: 204 40% 7%; /* Deep WhatsApp dark #0b141a */
+    --foreground: 204 15% 93%; /* Light grey-blue text #e9edef */
 
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 98%;
+    --card: 204 32% 10%; /* WhatsApp dark card background #111b21 */
+    --card-foreground: 204 15% 93%;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 204 32% 10%;
+    --popover-foreground: 204 15% 93%;
 
-    --primary: 145 100% 45%;
-    --primary-foreground: 0 0% 6%;
-    --primary-glow: 145 100% 60%;
+    --primary: 167 100% 33%; /* WhatsApp Green #00a884 */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 167 100% 45%;
 
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 204 23% 16%; /* WhatsApp hover background #202c33 */
+    --secondary-foreground: 204 15% 93%;
 
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 204 23% 16%;
+    --muted-foreground: 204 11% 65%; /* Soft slate text #8696a0 */
 
-    --accent: 22 100% 50%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 167 100% 33%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive-foreground: 0 0% 100%;
 
     --warning: 45 100% 55%;
-    --success: 145 100% 45%;
+    --success: 167 100% 33%;
 
-    --border: 0 0% 16%;
-    --input: 0 0% 14%;
-    --ring: 145 100% 45%;
+    --border: 204 20% 14%; /* Clean border line #222e35 */
+    --input: 204 23% 16%;
+    --ring: 167 100% 33%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(145 100% 45%) 0%, hsl(160 100% 40%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(22 100% 50%) 0%, hsl(15 100% 55%) 100%);
-    --gradient-card: linear-gradient(160deg, hsl(0 0% 12%) 0%, hsl(0 0% 8%) 100%);
-    --gradient-hero: radial-gradient(ellipse at top, hsl(145 100% 15% / 0.8) 0%, hsl(0 0% 6%) 60%);
+    --gradient-primary: linear-gradient(135deg, hsl(167 100% 33%) 0%, hsl(175 100% 28%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(167 100% 33%) 0%, hsl(175 100% 28%) 100%);
+    --gradient-card: linear-gradient(160deg, hsl(204 32% 12%) 0%, hsl(204 40% 8%) 100%);
+    --gradient-hero: radial-gradient(ellipse at top, hsl(167 100% 12% / 0.8) 0%, hsl(204 40% 7%) 60%);
 
-    --shadow-glow: 0 0 40px hsl(145 100% 45% / 0.35);
-    --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.4);
-    --shadow-elevated: 0 20px 60px -10px hsl(145 100% 45% / 0.4);
+    --shadow-glow: 0 0 30px hsl(167 100% 33% / 0.25);
+    --shadow-card: 0 4px 20px hsl(0 0% 0% / 0.35);
+    --shadow-elevated: 0 16px 40px -10px hsl(167 100% 33% / 0.3);
 
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
 
@@ -68,9 +68,10 @@
   }
 
   h1, h2, h3, .font-display {
-    font-family: 'Bebas Neue', sans-serif;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-transform: none;
   }
 }
 

@@ -22,12 +22,12 @@ const Welcome = () => {
             <span className="text-[10px] font-bold uppercase tracking-widest text-primary">A Revolução do Futebol Amador</span>
           </div>
           
-          <h1 className="font-display text-5xl leading-[1.1] tracking-tight">
-            O TEU PRÓXIMO <br />
-            <span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 drop-shadow-[0_0_24px_hsl(var(--primary)/0.6)]">
-              JOGO
+          <h1 className="font-display text-4xl font-extrabold leading-[1.15] tracking-tight">
+            O teu próximo <br />
+            <span className="text-primary bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 drop-shadow-[0_0_20px_hsl(var(--primary)/0.4)]">
+              jogo
             </span><br />
-            COMEÇA AQUI
+            começa aqui
           </h1>
           <p className="mt-5 text-sm text-muted-foreground max-w-[280px] mx-auto leading-relaxed">
             Encontra adversários, gere a tua equipa e leva a competição para o próximo nível.

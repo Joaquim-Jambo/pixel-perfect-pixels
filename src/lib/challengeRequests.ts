@@ -23,3 +23,13 @@ export const leaveChallenge = async (challengeId: string, teamId: string) => {
 
   return response.data;
 };
+
+export const acceptChallengeRequest = async (requestId: string) => {
+  const response = await api.post(`/requests/${requestId}/accept`);
+  return response.data;
+};
+
+export const rejectChallengeRequest = async (requestId: string) => {
+  const response = await api.post(`/requests/${requestId}/reject`);
+  return response.data;
+};

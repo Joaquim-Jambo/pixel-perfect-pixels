@@ -3,15 +3,50 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { myMatches } from "@/data/mock";
+import { Loader2 } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { Challenge } from "@/types/Challenge";
+import { AxiosError } from "axios";
 
 const MatchFeedback = () => {
   const { id } = useParams();
   const nav = useNavigate();
-  const match = myMatches.find((m) => m.id === id) ?? myMatches[0];
+  const { user } = useAuth();
+
+  const myTeamId = user?.teams?.[0]?.id ?? user?.team?.id;
+
+  const { data: match, isLoading } = useQuery({
+    queryKey: ['challenge', id],
+    queryFn: async () => {
+      const response = await api.get<Challenge>(`/challenges/${id}`);
+      return response.data;
+    },
+    enabled: !!id,
+  });
 
   const [showedUp, setShowedUp] = useState<boolean | null>(null);
   const [comment, setComment] = useState("");
+
+  const feedbackMutation = useMutation({
+    mutationFn: async () => {
+      if (!id || !myTeamId) throw new Error("Equipa não encontrada.");
+      return api.post("/matches/give-feedback", {
+        matchId: id,
+        appeared: showedUp,
+        comment: comment.trim() || undefined,
+        teamId: myTeamId,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Feedback enviado com sucesso! Obrigado.");
+      nav("/app/games");
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error.response?.data?.message || error.message || "Erro ao enviar feedback.");
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,18 +54,41 @@ const MatchFeedback = () => {
       toast.error("Por favor indica se a equipa adversária compareceu.");
       return;
     }
-    toast.success("Feedback enviado com sucesso! Obrigado.");
-    nav("/app/games");
+    feedbackMutation.mutate();
   };
+
+  if (isLoading) {
+    return (
+      <div>
+        <ScreenHeader title="Match Feedback" back />
+        <div className="flex h-64 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!match) {
+    return (
+      <div>
+        <ScreenHeader title="Match Feedback" back />
+        <div className="p-5 text-center text-muted-foreground mt-20">Desafio não encontrado.</div>
+      </div>
+    );
+  }
+
+  const opponentName = match.match?.awayTeam?.name || match.title || "Adversário";
+  const dateObj = new Date(match.scheduledAt);
+  const dateStr = dateObj.toLocaleDateString("pt-PT", { day: "2-digit", month: "short" });
 
   return (
     <div>
       <ScreenHeader title="Match Feedback" back />
 
       <div className="px-5 pt-6">
-        <h2 className="font-display text-3xl mb-2">Avalia o {match.opponent}</h2>
+        <h2 className="font-display text-3xl mb-2">Avalia o {opponentName}</h2>
         <p className="text-muted-foreground text-sm mb-8">
-          O teu feedback é essencial para manter a comunidade saudável. O jogo aconteceu a {match.date}.
+          O teu feedback é essencial para manter a comunidade saudável. O jogo aconteceu a {dateStr}.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-8">
@@ -74,8 +132,8 @@ const MatchFeedback = () => {
             />
           </div>
 
-          <Button type="submit" variant="hero" size="lg" className="w-full">
-            Enviar Feedback
+          <Button type="submit" variant="hero" size="lg" className="w-full" disabled={feedbackMutation.isPending}>
+            {feedbackMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Enviar Feedback"}
           </Button>
 
         </form>

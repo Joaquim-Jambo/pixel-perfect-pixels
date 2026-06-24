@@ -31,6 +31,13 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Se o erro for 429 (rate limit), rejeitar com mensagem amigável
+    if (error.response?.status === 429) {
+      const rateLimitError = new Error("Muitas requisições. Tente novamente mais tarde.");
+      rateLimitError.name = "RateLimitError";
+      return Promise.reject(rateLimitError);
+    }
+
     // Se o erro for 401 e não for a rota de login nem a de refresh
     if (error.response?.status === 401 && !originalRequest.url?.includes("/auth/") && !originalRequest.url?.includes("/refresh") && !originalRequest._retry) {
       originalRequest._retry = true;

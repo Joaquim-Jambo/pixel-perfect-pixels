@@ -10,6 +10,7 @@ interface ChallengeTeam {
   name: string;
   province?: string;
   emblemUrl?: string | null;
+  rating?: number;
   raiting?: number;
 }
 
@@ -61,14 +62,14 @@ export const ChallengeCard = ({ challenge, to }: IChallangeCardProps) => {
             </span>
           </div>
 
-          {/* {challenge.team?.raiting !== undefined && (
+          {(challenge.team?.rating !== undefined || challenge.team?.raiting !== undefined) && (
             <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
               <Star className="h-3 w-3 fill-warning text-warning" />
               <span className="font-semibold text-foreground">
-                {Number(challenge.team.raiting).toFixed(1)}
+                {Number(challenge.team.rating ?? challenge.team.raiting).toFixed(1)}
               </span>
             </div>
-          )} */}
+          )}
         </div>
       </div>
 

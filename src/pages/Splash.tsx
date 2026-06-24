@@ -1,17 +1,26 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 const Splash = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
-    // Redireciona para o ecrã de boas-vindas após 2.5 segundos
+    if (isLoading) return;
+
+    // Redireciona após 2 segundos dependendo do estado de autenticação
     const timer = setTimeout(() => {
-      navigate("/welcome");
-    }, 2500);
+      if (isAuthenticated) {
+        navigate("/app");
+      } else {
+        navigate("/welcome");
+      }
+    }, 2000);
 
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, isAuthenticated, isLoading]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background relative overflow-hidden">

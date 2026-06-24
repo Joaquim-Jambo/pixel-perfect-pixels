@@ -13,6 +13,7 @@ interface UserTeam {
   id: string;
   name: string;
   ownerRole: string; // ex: "CAPTAIN", "COACH"
+  rating?: number;
   raiting?: number;
   gamePlayed?: number;
   emblemUrl?: string | null;
@@ -107,6 +108,11 @@ const Profile = () => {
           <p className="text-sm text-muted-foreground opacity-80 relative z-10">
             {user?.email}
           </p>
+          {user?.phone && (
+            <p className="text-xs text-muted-foreground/60 mt-1 relative z-10">
+              {user.phone} {user.phoneVerified && <span className="text-primary font-bold">· Verificado</span>}
+            </p>
+          )}
         </div>
 
         {/* Card da Equipa */}
@@ -137,7 +143,11 @@ const Profile = () => {
                   <div className="flex items-center gap-1 justify-end">
                     <Star className="h-4 w-4 fill-warning text-warning" />
                     <span className="font-display text-xl">
-                      {team.raiting !== undefined ? Number(team.raiting).toFixed(1) : "0.0"}
+                      {team.rating !== undefined 
+                        ? Number(team.rating).toFixed(1) 
+                        : team.raiting !== undefined 
+                          ? Number(team.raiting).toFixed(1) 
+                          : "0.0"}
                     </span>
                   </div>
                   <p className="text-[10px] text-muted-foreground uppercase">Rating</p>

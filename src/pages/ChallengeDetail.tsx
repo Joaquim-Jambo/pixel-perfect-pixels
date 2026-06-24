@@ -57,7 +57,7 @@ const ChallengeDetail = () => {
   const joinMutation = useMutation({
     mutationFn: async () => {
       if (!id || !resolvedTeamId) {
-        throw new Error("Equipa indisponível para candidatura.");
+        throw new Error("Você deve ter uma equipa para entrar em um desafio.");
       }
 
       return joinChallenge(id, resolvedTeamId);
@@ -67,14 +67,14 @@ const ChallengeDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["challenge-requests", id] });
     },
     onError: (mutationError: AxiosError<{ message?: string }>) => {
-      toast.error(mutationError.response?.data?.message || mutationError.message || "Erro ao candidatar-se ao desafio.");
+      toast.error(Array.isArray(mutationError.response?.data?.message) ? mutationError.response.data.message.join(", ") : mutationError.response?.data?.message || mutationError.message || "Erro ao candidatar-se ao desafio.");
     },
   });
 
   const leaveMutation = useMutation({
     mutationFn: async () => {
       if (!id || !resolvedTeamId) {
-        throw new Error("Equipa indisponível para cancelar candidatura.");
+        throw new Error("Você deve ter uma equipa para sair de um desafio.");
       }
 
       return leaveChallenge(id, resolvedTeamId);
@@ -84,7 +84,7 @@ const ChallengeDetail = () => {
       queryClient.invalidateQueries({ queryKey: ["challenge-requests", id] });
     },
     onError: (mutationError: AxiosError<{ message?: string }>) => {
-      toast.error(mutationError.response?.data?.message || mutationError.message || "Erro ao cancelar a candidatura.");
+      toast.error(Array.isArray(mutationError.response?.data?.message) ? mutationError.response.data.message.join(", ") : mutationError.response?.data?.message || mutationError.message || "Erro ao cancelar a candidatura.");
     },
   });
 
